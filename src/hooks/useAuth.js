@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider, isFirebaseConfigured } from "../lib/firebase";
 
@@ -23,41 +29,66 @@ export function useAuth() {
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [error, setError] = useState("");
 
+  const isMobileDevice =
+    typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+
   useEffect(() => {
     if (!auth) {
       setLoading(false);
       return undefined;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
-      const nextRole = getUserRole(nextUser?.email ?? "");
-      setUser(nextUser);
-      setRole(nextRole);
+    let unsubscribe = () => {};
+    let cancelled = false;
 
-      if (!nextUser || !db) {
-        setLoading(false);
+    async function initializeAuth() {
+      try {
+        await getRedirectResult(auth);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message ?? "Falha ao concluir o login com o Google.");
+        }
+      }
+
+      if (cancelled) {
         return;
       }
 
-      try {
-        await setDoc(
-          doc(db, "users", nextUser.uid),
-          {
-            uid: nextUser.uid,
-            email: nextUser.email ?? "",
-            displayName: nextUser.displayName ?? "",
-            role: nextRole,
-          },
-          { merge: true },
-        );
-      } catch (err) {
-        setError(err.message ?? "Não foi possível sincronizar o usuário.");
-      } finally {
-        setLoading(false);
-      }
-    });
+      unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
+        const nextRole = getUserRole(nextUser?.email ?? "");
+        setUser(nextUser);
+        setRole(nextRole);
 
-    return unsubscribe;
+        if (!nextUser || !db) {
+          setLoading(false);
+          return;
+        }
+
+        try {
+          await setDoc(
+            doc(db, "users", nextUser.uid),
+            {
+              uid: nextUser.uid,
+              email: nextUser.email ?? "",
+              displayName: nextUser.displayName ?? "",
+              role: nextRole,
+            },
+            { merge: true },
+          );
+        } catch (err) {
+          setError(err.message ?? "Não foi possível sincronizar o usuário.");
+        } finally {
+          setLoading(false);
+        }
+      });
+    }
+
+    initializeAuth();
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   async function login() {
@@ -68,6 +99,11 @@ export function useAuth() {
 
     setError("");
     try {
+      if (isMobileDevice) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       setError(err.message ?? "Falha ao entrar com o Google.");
