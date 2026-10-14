@@ -1,7 +1,7 @@
 # Software Design Document (SDD) - Copa de Vôlei App
 
 ## 1. Visão Geral (System Context)
-Aplicação web (SPA) para gerenciamento de jogos e tabela de classificação em tempo real durante um torneio de vôlei de praia. O sistema será operado pelos administradores do evento na beira da quadra para atualizar os resultados, que refletirão instantaneamente na classificação.
+Aplicação web (SPA) para gerenciamento de jogos e tabela de classificação em tempo real durante um torneio de vôlei de praia, dividido em duas categorias: Feminino (manhã) e Masculino (tarde). O sistema será operado pelos administradores do evento na beira da quadra para atualizar os resultados, que refletirão instantaneamente na classificação.
 
 ## 2. Arquitetura (Container Level)
 - **Frontend:** React + Vite, estilizado com Tailwind CSS.
@@ -19,6 +19,7 @@ O banco de dados (Firestore) será normalizado ao máximo para reduzir leituras.
   - `displayName` (string)
 - **Coleção `matches`:**
   - `id` (string)
+  - `category` (string: "Feminino" | "Masculino")
   - `group` (string: "A" | "B")
   - `team1` (string)
   - `team2` (string)
@@ -37,5 +38,6 @@ O banco de dados (Firestore) será normalizado ao máximo para reduzir leituras.
 
 ## 5. Fluxos Principais
 1. **Autenticação:** Usuário acessa a rota `/`. Se não autenticado via Google, exibe apenas botão de Login.
-2. **Atualização de Jogo:** Admin insere o placar no card do jogo e clica em "Salvar". O Firestore é atualizado com `isFinished: true` e `score`.
-3. **Reatividade:** O listener `onSnapshot` do Firestore detecta a mudança e aciona o recalculo imediato da tabela de classificação na UI.
+2. **Categoria:** Admin alterna entre Feminino e Masculino; jogos e classificação exibem somente a categoria ativa.
+3. **Atualização de Jogo:** Admin insere o placar no card do jogo e clica em "Salvar". O Firestore é atualizado com `isFinished: true` e `score`.
+4. **Reatividade:** O listener `onSnapshot` do Firestore detecta a mudança e aciona o recalculo imediato da tabela de classificação na UI.
