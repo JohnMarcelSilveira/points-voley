@@ -25,7 +25,11 @@ export function MatchCard({ match, onSave, saving }) {
       </div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <p className="text-sm font-semibold text-slate-800">{match.team1}</p>
+        <div className="text-center sm:text-left">
+          <p className="text-sm font-semibold text-slate-800">{match.team1}</p>
+          <p className="mt-1 text-[11px] text-slate-500 uppercase">Equipe 1</p>
+        </div>
+
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -47,7 +51,11 @@ export function MatchCard({ match, onSave, saving }) {
             aria-label={`Placar de ${match.team2}`}
           />
         </div>
-        <p className="text-right text-sm font-semibold text-slate-800">{match.team2}</p>
+
+        <div className="text-center sm:text-right">
+          <p className="text-sm font-semibold text-slate-800">{match.team2}</p>
+          <p className="mt-1 text-[11px] text-slate-500 uppercase">Equipe 2</p>
+        </div>
       </div>
 
       <button

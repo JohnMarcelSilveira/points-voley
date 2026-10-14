@@ -3,8 +3,19 @@ import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider, isFirebaseConfigured } from "../lib/firebase";
 
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+export function getUserRole(email) {
+  const normalizedEmail = (email ?? "").trim().toLowerCase();
+  return ADMIN_EMAILS.includes(normalizedEmail) ? "admin" : "reader";
+}
+
 export function useAuth() {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState("reader");
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [error, setError] = useState("");
 
@@ -15,7 +26,9 @@ export function useAuth() {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
+      const nextRole = getUserRole(nextUser?.email ?? "");
       setUser(nextUser);
+      setRole(nextRole);
       setLoading(false);
 
       if (!nextUser || !db) return;
@@ -26,6 +39,7 @@ export function useAuth() {
           uid: nextUser.uid,
           email: nextUser.email ?? "",
           displayName: nextUser.displayName ?? "",
+          role: nextRole,
         },
         { merge: true },
       );
@@ -53,5 +67,13 @@ export function useAuth() {
     await signOut(auth);
   }
 
-  return { user, loading, error, login, logout, configured: isFirebaseConfigured };
+  return {
+    user,
+    role,
+    loading,
+    error,
+    login,
+    logout,
+    configured: isFirebaseConfigured,
+  };
 }

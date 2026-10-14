@@ -10,6 +10,19 @@ function emptyRow(team) {
   };
 }
 
+function resolveTeamName(match, side, teamMap = new Map()) {
+  const key = side === "team1" ? "team1Id" : "team2Id";
+  const nameKey = side === "team1" ? "team1Name" : "team2Name";
+  const fallbackKey = side === "team1" ? "team1" : "team2";
+
+  return (
+    teamMap.get(match[key])?.name ??
+    match[nameKey] ??
+    match[fallbackKey] ??
+    "Equipe"
+  );
+}
+
 function headToHeadResult(matches, teamA, teamB) {
   const direct = matches.find(
     (match) =>
@@ -27,13 +40,13 @@ function headToHeadResult(matches, teamA, teamB) {
   return bScore - aScore;
 }
 
-export function computeStandings(matches, group) {
+export function computeStandings(matches, group, teamMap = new Map()) {
   const groupMatches = matches.filter((match) => match.group === group);
   const teams = new Set();
 
   groupMatches.forEach((match) => {
-    teams.add(match.team1);
-    teams.add(match.team2);
+    teams.add(resolveTeamName(match, "team1", teamMap));
+    teams.add(resolveTeamName(match, "team2", teamMap));
   });
 
   const table = {};
@@ -44,8 +57,10 @@ export function computeStandings(matches, group) {
   groupMatches
     .filter((match) => match.isFinished)
     .forEach((match) => {
-      const home = table[match.team1];
-      const away = table[match.team2];
+      const team1 = resolveTeamName(match, "team1", teamMap);
+      const team2 = resolveTeamName(match, "team2", teamMap);
+      const home = table[team1];
+      const away = table[team2];
 
       home.pointsFor += Number(match.score1) || 0;
       home.pointsAgainst += Number(match.score2) || 0;
