@@ -80,9 +80,6 @@ export function Dashboard({
           <div>
             <p className="text-xs tracking-widest text-orange-300 uppercase">Ao vivo</p>
             <h1 className="text-lg font-black">Copa de Vôlei</h1>
-            <p className="mt-1 text-[11px] text-slate-300">
-              Pensado para uso no celular, com toque rápido e leitura simples.
-            </p>
           </div>
 
           <div className="text-right">
@@ -120,8 +117,8 @@ export function Dashboard({
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <aside className="grid content-start gap-3 lg:sticky lg:top-24 lg:self-start">
+      <main className="mx-auto grid max-w-6xl gap-4 px-3 py-4 lg:grid-cols-[0.9fr_1.1fr] lg:gap-6 lg:px-4 lg:py-6">
+        <aside className="grid content-start gap-2 lg:sticky lg:top-24 lg:self-start">
           <div className="flex gap-2 md:hidden">
             {[
               ["A", "Chave A"],
@@ -157,18 +154,18 @@ export function Dashboard({
             <StandingsTable title={`${category} — Chave B`} rows={standingsB} />
           </div>
 
-          <p className="text-xs text-slate-500">
+          <p className="text-[11px] leading-4 text-slate-500">
             Os 2 primeiros de cada chave avançam. Critérios: vitórias, saldo e confronto direto.
           </p>
         </aside>
 
         <section>
-          <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="mb-3 flex items-end justify-between gap-2">
             <div>
-              <h2 className="text-xl font-black text-slate-900">Jogos · {category}</h2>
+              <h2 className="text-lg font-black text-slate-900 sm:text-xl">Jogos · {category}</h2>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 ["all", "Todos"],
                 ["A", "Chave A"],
@@ -178,7 +175,7 @@ export function Dashboard({
                   key={value}
                   type="button"
                   onClick={() => setGroupFilter(value)}
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
                     groupFilter === value
                       ? "bg-slate-900 text-white"
                       : "bg-white text-slate-600 ring-1 ring-slate-200"
@@ -191,7 +188,7 @@ export function Dashboard({
           </div>
 
           {isAdmin && (
-            <div className="mb-4 flex justify-end gap-2">
+            <div className="mb-3 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={onOpenAdmin}
@@ -219,11 +216,11 @@ export function Dashboard({
           {loading ? (
             <p className="text-slate-600">Carregando jogos...</p>
           ) : visibleMatches.length === 0 ? (
-            <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
+            <div className="rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
               <p className="text-slate-600">Nenhum jogo da categoria {category} ainda. Gere os jogos para começar.</p>
             </div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               {visibleMatches.map((match) => (
                 <MatchCard
                   key={match.id}

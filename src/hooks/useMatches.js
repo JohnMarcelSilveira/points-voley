@@ -109,17 +109,26 @@ export function useMatches(user) {
   async function saveTeams(nextTeams) {
     if (!db || !user) return;
 
+      setError("");
     const batch = writeBatch(db);
     nextTeams.forEach((team) => {
       const name = team.name?.trim();
       if (!team.id || !name) return;
-      batch.update(doc(db, "teams", team.id), {
-        name,
-        updatedAt: Date.now(),
-      });
+        batch.set(
+          doc(db, "teams", team.id),
+          {
+            name,
+            updatedAt: Date.now(),
+          },
+          { merge: true },
+        );
     });
 
-    await batch.commit();
+      try {
+        await batch.commit();
+      } catch (err) {
+        setError(err.message ?? "Não foi possível salvar os times.");
+      }
   }
 
   async function saveScore(matchId, score1, score2) {
