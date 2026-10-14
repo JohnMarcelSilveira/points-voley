@@ -31,6 +31,7 @@ export default function App() {
         teams={matchesState.teams}
         matches={matchesState.matches}
         seeding={matchesState.seeding}
+        error={matchesState.error}
         onSeed={matchesState.seedMatches}
         onSaveTeams={matchesState.saveTeams}
       />

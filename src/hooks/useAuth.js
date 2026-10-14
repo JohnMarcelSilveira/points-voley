@@ -3,14 +3,18 @@ import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider, isFirebaseConfigured } from "../lib/firebase";
 
+const DEFAULT_ADMIN_EMAILS = ["johnmarcelsilveira@gmail.com"];
+
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
   .split(",")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
+const AUTHORIZED_ADMIN_EMAILS = ADMIN_EMAILS.length > 0 ? ADMIN_EMAILS : DEFAULT_ADMIN_EMAILS;
+
 export function getUserRole(email) {
   const normalizedEmail = (email ?? "").trim().toLowerCase();
-  return ADMIN_EMAILS.includes(normalizedEmail) ? "admin" : "reader";
+  return AUTHORIZED_ADMIN_EMAILS.includes(normalizedEmail) ? "admin" : "reader";
 }
 
 export function useAuth() {
@@ -29,20 +33,28 @@ export function useAuth() {
       const nextRole = getUserRole(nextUser?.email ?? "");
       setUser(nextUser);
       setRole(nextRole);
-      setLoading(false);
 
-      if (!nextUser || !db) return;
+      if (!nextUser || !db) {
+        setLoading(false);
+        return;
+      }
 
-      await setDoc(
-        doc(db, "users", nextUser.uid),
-        {
-          uid: nextUser.uid,
-          email: nextUser.email ?? "",
-          displayName: nextUser.displayName ?? "",
-          role: nextRole,
-        },
-        { merge: true },
-      );
+      try {
+        await setDoc(
+          doc(db, "users", nextUser.uid),
+          {
+            uid: nextUser.uid,
+            email: nextUser.email ?? "",
+            displayName: nextUser.displayName ?? "",
+            role: nextRole,
+          },
+          { merge: true },
+        );
+      } catch (err) {
+        setError(err.message ?? "Não foi possível sincronizar o usuário.");
+      } finally {
+        setLoading(false);
+      }
     });
 
     return unsubscribe;
@@ -50,7 +62,7 @@ export function useAuth() {
 
   async function login() {
     if (!auth) {
-      setError("Configure as variáveis VITE_FIREBASE_* no arquivo .env.");
+      setError("Firebase não está configurado neste ambiente. Verifique as variáveis VITE_FIREBASE_*.");
       return;
     }
 

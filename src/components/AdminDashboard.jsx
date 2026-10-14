@@ -10,10 +10,12 @@ export function AdminDashboard({
   teams,
   matches,
   seeding,
+  error,
   onSeed,
   onSaveTeams,
 }) {
   const [draftTeams, setDraftTeams] = useState([]);
+  const [savingTeams, setSavingTeams] = useState(false);
 
   useEffect(() => {
     setDraftTeams(teams ?? []);
@@ -43,7 +45,13 @@ export function AdminDashboard({
 
   async function handleSave() {
     if (!onSaveTeams) return;
-    await onSaveTeams(draftTeams);
+
+    setSavingTeams(true);
+    try {
+      await onSaveTeams(draftTeams);
+    } finally {
+      setSavingTeams(false);
+    }
   }
 
   return (
@@ -94,13 +102,20 @@ export function AdminDashboard({
             </button>
             <button
               type="button"
+              disabled={savingTeams}
               onClick={handleSave}
-              className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500"
+              className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-60"
             >
-              Salvar times
+              {savingTeams ? "Salvando..." : "Salvar times"}
             </button>
           </div>
         </div>
+
+        {error && (
+          <p className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
 
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">

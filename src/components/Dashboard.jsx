@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MatchCard } from "./MatchCard";
 import { StandingsTable } from "./StandingsTable";
 import { computeStandings } from "../lib/standings";
+import { sortMatchesByGameOrder } from "../lib/sortMatches";
 
 const CATEGORIES = [
   { id: "Feminino", label: "Feminino", hint: "Manhã" },
@@ -61,7 +62,7 @@ export function Dashboard({
         ? filteredMatches
         : filteredMatches.filter((match) => match.group === groupFilter);
 
-    return [...filtered].sort((a, b) => String(a.id).localeCompare(String(b.id), "pt-BR"));
+    return sortMatchesByGameOrder(filtered);
   }, [filteredMatches, groupFilter]);
 
   const standingsA = useMemo(

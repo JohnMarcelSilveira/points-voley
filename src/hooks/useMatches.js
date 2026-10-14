@@ -4,6 +4,7 @@ import {
   doc,
   onSnapshot,
   writeBatch,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -81,24 +82,23 @@ export function useMatches(user) {
         return;
       }
 
-      const batch = writeBatch(db);
+      const writeOperations = [
+        ...toWriteTeams.map((team) =>
+          setDoc(doc(db, "teams", team.id), {
+            ...team,
+            updatedAt: Date.now(),
+          }),
+        ),
+        ...toWriteMatches.map((match) => {
+          const { id, ...data } = match;
+          return setDoc(doc(db, "matches", id), {
+            ...data,
+            updatedBy: "",
+          });
+        }),
+      ];
 
-      toWriteTeams.forEach((team) => {
-        batch.set(doc(db, "teams", team.id), {
-          ...team,
-          updatedAt: Date.now(),
-        });
-      });
-
-      toWriteMatches.forEach((match) => {
-        const { id, ...data } = match;
-        batch.set(doc(db, "matches", id), {
-          ...data,
-          updatedBy: "",
-        });
-      });
-
-      await batch.commit();
+      await Promise.all(writeOperations);
     } catch (err) {
       setError(err.message ?? "Não foi possível popular o banco.");
     } finally {
@@ -109,26 +109,36 @@ export function useMatches(user) {
   async function saveTeams(nextTeams) {
     if (!db || !user) return;
 
-      setError("");
+    setError("");
     const batch = writeBatch(db);
+    let writesCount = 0;
+
     nextTeams.forEach((team) => {
       const name = team.name?.trim();
       if (!team.id || !name) return;
-        batch.set(
-          doc(db, "teams", team.id),
-          {
-            name,
-            updatedAt: Date.now(),
-          },
-          { merge: true },
-        );
+      const { id, ...teamData } = team;
+      writesCount += 1;
+      batch.set(
+        doc(db, "teams", id),
+        {
+          ...teamData,
+          name,
+          updatedAt: Date.now(),
+        },
+        { merge: true },
+      );
     });
 
-      try {
-        await batch.commit();
-      } catch (err) {
-        setError(err.message ?? "Não foi possível salvar os times.");
-      }
+    if (writesCount === 0) {
+      setError("Nenhum time válido para salvar.");
+      return;
+    }
+
+    try {
+      await batch.commit();
+    } catch (err) {
+      setError(err.message ?? "Não foi possível salvar os times.");
+    }
   }
 
   async function saveScore(matchId, score1, score2) {

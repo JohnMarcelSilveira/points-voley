@@ -19,8 +19,8 @@ export function LoginScreen({ onLogin, error, configured }) {
         </button>
         {!configured && (
           <p className="mt-4 text-sm text-amber-700">
-            Firebase ainda não está configurado. Preencha o arquivo <code>.env</code>{" "}
-            com as chaves do projeto.
+            Firebase ainda não está configurado neste ambiente. Verifique as variáveis
+            VITE_FIREBASE_*.
           </p>
         )}
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
